@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>華芝商業機器 - 理光SC/SP/J終極全書</title>
+    <style>
+        :root {
+            --bg-main: #0a0e1a;
+            --bg-card: rgba(255,255,255,0.04);
+            --border-color: rgba(255,255,255,0.1);
+            --text-main: #e2e8f0;
+            --accent: #6366f1;
+            --cause: #f59e0b;
+            --remedy: #10b981;
+        }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 50px;
+        }
+        .header {
+            background: #111827;
+            padding: 25px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px 16px;
+        }
+        .model-grid {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .model-btn {
+            flex: 1 1 30%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03);
+            color: #94a3b8;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .model-btn.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 15px var(--accent);
+        }
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        input {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 18px;
+            outline: none;
+            font-weight: 700;
+        }
+        button.btn-search {
+            padding: 0 25px;
+            border-radius: 12px;
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .result-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            display: none;
+            margin-top: 10px;
+        }
+        .res-head {
+            padding: 20px;
+            background: rgba(99,102,241,0.15);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .code-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--accent);
+        }
+        .section {
+            padding: 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sec-title {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        .cause-box {
+            padding: 14px;
+            background: rgba(245,158,11,0.08);
+            border-left: 5px solid var(--cause);
+            font-size: 15px;
+            line-height: 1.6;
+            border-radius: 4px;
+        }
+        .rem-item {
+            padding: 12px;
+            background: rgba(16,185,129,0.08);
+            border-left: 5px solid var(--remedy);
+            font-size: 15px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        .counter-p {
+            text-align: center;
+            font-size: 12px;
+            color: #475569;
+            margin-top: 30px;
+            border-top: 1px solid #1e293b;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>理光維修全書 (哲倫專業版)</h1>
+            <p style="color:#6366f1;margin:5px 0 0;font-size:13px;font-weight:700;">華芝商業機器 · 終極全展開版</p>
+        </div>
+    </div>
+    <div class="container">
+        <div class="model-grid">
+            <button class="model-btn" onclick="selM('MPC5503', this)">MPC5503</button>
+            <button class="model-btn" onclick="selM('MPC3504', this)">MPC3504</button>
+            <button class="model-btn" onclick="selM('IMC3500', this)">IMC3500</button>
+            <button class="model-btn" onclick="selM('MP3555', this)">MP3555</button>
+            <button class="model-btn" onclick="selM('MPC5502', this)">MPC5502</button>
+        </div>
+        <div class="search-box">
+            <input type="text" id="q" placeholder="直接輸入代碼 (如 681, 549, 5801)" onkeypress="if(event.key==='Enter') search()">
+            <button class="btn-search" onclick="search()">查詢</button>
+        </div>
+        <div id="res" class="result-card">
+            <div class="res-head"><span id="mTag" style="font-size:11px; opacity:0.6;"></span><br><span class="code-title" id="rCode"></span><p id="rName" style="margin:5px 0 0; font-weight:700;"></p></div>
+            <div class="section"><div class="sec-title" style="color:var(--cause)">⚠️ 故障描述 / 原因</div><div class="cause-box" id="rCause"></div></div>
+            <div class="section"><div class="sec-title" style="color:var(--remedy)">🔧 維修指引 / 指令</div><div id="rRem"></div></div>
+        </div>
+        <div class="counter-p" id="count">正在載入完全體資料庫...</div>
+    </div>
+
+    <script>
+        window.db = {
+            "COMMON": {
+                // --- 1xx 掃描系統 ---
+                "SC101-01": {
+                    name: "曝光燈白電平過低",
+                    cause: "掃描標準白板時，峰值無法達到規定的數值。可能玻璃髒污、曝光燈損毀、SBU板故障。",
+                    rem: ["清潔掃描器玻璃與白板","檢查曝光燈排線","更換曝光燈單元","更換 SBU 或 SIO 板"]
+                },
+                "SC120-00": {
+                    name: "掃描座回位異常",
+                    cause: "掃描馬達啟動後，原點感應器 (HP) 沒偵測到變化。鋼索可能斷裂或馬達卡死。",
+                    rem: ["檢查掃描馬達與驅動鋼索","清潔 HP 感應器","檢查掃描座軌道是否有異物"]
+                },
+                "SC144-00": {
+                    name: "SBU 通訊錯誤",
+                    cause: "開機或掃描時，SBU 板與主機板 (BCU) 失去通訊。",
+                    rem: ["重新插拔 SBU 到 BCU 的排線","檢查 IPU 板","更換 SBU 板"]
+                },
+                "SC185-00": {
+                    name: "CIS 傳輸錯誤",
+                    cause: "ADF 內的 CIS 掃描單元與主機連線失敗。",
+                    rem: ["檢查 ADF 內部的 CIS 粗排線","更換 CIS 單元"]
+                },
+                // --- 2xx 雷射系統 ---
+                "SC202-00": {
+                    name: "多角鏡馬達轉速異常",
+                    cause: "雷射單元 (LSU) 內部的旋轉鏡馬達無法維持正確轉速。",
+                    rem: ["更換雷射單元 (LSU)","檢查 LSU 連接線"]
+                },
+                "SC220-01": {
+                    name: "雷射同步錯誤 (黑)",
+                    cause: "黑色雷射二極管 (LD) 無法正確對位或同步。",
+                    rem: ["清潔 LSU 窗口玻璃","檢查黑 LD 排線","更換 LSU"]
+                },
+                // --- 3xx 鼓與顯影單元 ---
+                "SC300-00": {
+                    name: "充電漏電 (黑)",
+                    cause: "黑色鼓單元充電輥偵測到漏電，通常是 PCU 損毀。",
+                    rem: ["清潔黑色充電輥","更換黑色 PCU","檢查高壓板 (HVPS)"]
+                },
+                "SC312-01": {
+                    name: "充電偏壓錯誤 (黑)",
+                    cause: "高壓板無法輸出正確的充電電壓給黑色 PCU。",
+                    rem: ["檢查黑色鼓單元接點","更換高壓供電板"]
+                },
+                "SC324-01": {
+                    name: "顯影馬達鎖定 (黑)",
+                    cause: "黑色顯影槽負荷過大或馬達燒毀。",
+                    rem: ["手動旋轉黑色顯影槽看是否卡死","更換黑色顯影馬達"]
+                },
+                "SC360-01": {
+                    name: "TD 初始化異常 (黑)",
+                    cause: "黑色 TD 感應器校準失敗，可能無載體或感應器損壞。",
+                    rem: ["檢查載體量","執行 SP3-030 重新初始化","更換 TD 感應器"]
+                },
+                "SC362-01": {
+                    name: "TD Vt 高 (黑-缺粉)",
+                    cause: "黑色碳粉濃度過低，粉瓶空或粉泵故障。",
+                    rem: ["檢查黑色粉瓶","更換黑色粉泵單元","執行 SP2-207 強制補粉"]
+                },
+                "SC362-05": {
+                    name: "TD Vt 高 (彩色-缺粉)",
+                    cause: "彩色(CMY)其中一色極度缺粉。",
+                    rem: ["檢查各色粉瓶與粉泵","執行 SP2-207"]
+                },
+                "SC396-01": {
+                    name: "鼓馬達鎖定 (黑)",
+                    cause: "黑色鼓單元馬達訊號異常。",
+                    rem: ["檢查黑色 PCDU 是否卡紙碎","更換黑色鼓馬達"]
+                },
+                "SC396-05": {
+                    name: "鼓馬達鎖定 (彩色)",
+                    cause: "彩色鼓驅動馬達訊號異常高電位。",
+                    rem: ["更換彩色鼓馬達","檢查 IOB 板","更換彩色 PCDU"]
+                },
+                // --- 4xx 轉寫單元 ---
+                "SC400-00": {
+                    name: "ID 感應器校正錯誤",
+                    cause: "校正色彩時，ID 感應器讀不到轉寫帶上的測試塊。",
+                    rem: ["清潔轉寫帶下方三個 ID 感應器","檢查轉寫帶 (ITB) 表面刮傷"]
+                },
+                "SC441-00": {
+                    name: "轉寫帶驅動馬達異常",
+                    cause: "轉寫單元 (ITB) 負荷過大或馬達燒毀。",
+                    rem: ["檢查 ITB 內部是否有碎紙","更換 ITB 驅動馬達"]
+                },
+                // --- 5xx 定著與進紙系統 ---
+                "SC501-01": {
+                    name: "第一紙匣提升異常",
+                    cause: "紙匣 1 升降馬達故障，無法將紙張升到定位。",
+                    rem: ["檢查紙匣內部碎紙","更換升降馬達","檢查紙匣底板"]
+                },
+                "SC504-01": {
+                    name: "第四紙匣提升異常",
+                    cause: "加裝紙匣組 (Bank) 提升機構失敗。",
+                    rem: ["檢查外部紙匣 Bank 排線與馬達"]
+                },
+                "SC541-00": {
+                    name: "定著熱敏電阻斷路 (中心)",
+                    cause: "定著單元中心熱敏電阻偵測失敗。",
+                    rem: ["檢查定著組接頭","更換中心熱敏電阻"]
+                },
+                "SC542-00": {
+                    name: "定著加熱超時",
+                    cause: "預熱過慢。燈管燒毀或熱敏電阻髒污。",
+                    rem: ["檢查加熱燈管","清潔熱敏電阻","★修好後必執行 SP5-810 重置"]
+                },
+                "SC543-00": {
+                    name: "定著過熱異常",
+                    cause: "中心溫度偵測到超過上限 (230°C)。",
+                    rem: ["更換中心熱敏電阻","檢查保險絲 (Thermostat)","SP5-810 重置"]
+                },
+                "SC549-01": {
+                    name: "定著遮光板馬達鎖定 (HP)",
+                    cause: "定著組內遮光板馬達無法回到原點。常見於 MPC5503/3504。",
+                    rem: ["檢查遮光板齒輪","更換遮光板馬達","檢查感應器"]
+                },
+                "SC554-00": {
+                    name: "定著壓力馬達錯誤",
+                    cause: "加壓/減壓機構運轉失敗。",
+                    rem: ["檢查定著加壓馬達","檢查凸輪位置感應器"]
+                },
+                "SC594-04": {
+                    name: "定著皮帶旋轉異常",
+                    cause: "偵測不到皮帶轉動訊號，皮帶可能打滑或破損。",
+                    rem: ["檢查定著皮帶邊緣","更換整個定著單元 (Fuser Unit)"]
+                },
+                // --- 6xx 通訊系統 (修正重點：SC681) ---
+                "SC672-00": {
+                    name: "面板通訊錯誤",
+                    cause: "開機卡 Logo。主機板 RAM、硬碟或面板線異常。",
+                    rem: ["重插 RAM","拔硬碟測試能否開機","更新系統 Firmware"]
+                },
+                "SC681-00": {
+                    name: "RFID 晶片讀取異常",
+                    cause: "讀不到碳粉瓶或鼓單元上的晶片。金屬點髒污或天線損壞。",
+                    rem: ["清潔耗材上的金屬晶片接點","檢查機內讀取天線排線","更換耗材"]
+                },
+                "SC681-01": { name: "RFID 通訊異常 (K)", cause: "黑色碳粉瓶晶片讀取失敗。", rem: ["清潔 K 碳粉瓶晶片"] },
+                "SC681-02": { name: "RFID 通訊異常 (M)", cause: "洋紅碳粉瓶晶片讀取失敗。", rem: ["清潔 M 碳粉瓶晶片"] },
+                "SC681-03": { name: "RFID 通訊異常 (C)", cause: "青色碳粉瓶晶片讀取失敗。", rem: ["清潔 C 碳粉瓶晶片"] },
+                "SC681-04": { name: "RFID 通訊異常 (Y)", cause: "黃色碳粉瓶晶片讀取失敗。", rem: ["清潔 Y 碳粉瓶晶片"] },
+                // --- 7xx 周邊/ADF ---
+                "SC701-08": {
+                    name: "ADF 出紙馬達鎖定",
+                    cause: "送稿機排紙部馬達故障或被卡死。",
+                    rem: ["清理出紙口碎紙","更換 ADF 出紙馬達"]
+                },
+                // --- 8xx/9xx 硬碟與系統 ---
+                "SC819-00": {
+                    name: "系統核心軟體崩潰",
+                    cause: "Kernel 致命錯誤。記憶體或硬碟損毀引起。",
+                    rem: ["重新開機","更新 Controller 韌體"]
+                },
+                "SC860-00": {
+                    name: "硬碟啟動失敗",
+                    cause: "開機偵測不到硬碟。",
+                    rem: ["檢查 SATA 線與電源線","更換硬碟"]
+                },
+                "SC863-00": {
+                    name: "硬碟讀寫錯誤",
+                    cause: "硬碟磁區損毀，資料無法讀取。",
+                    rem: ["執行 SP5-832 格式化","更換硬碟"]
+                },
+                "SC995-00": {
+                    name: "機器序號不匹配",
+                    cause: "換主板或 NVRAM 後序號未設定。",
+                    rem: ["進入 SP 模式執行 SP5-811 寫入序號"]
+                },
+                // --- J 系列：全方位卡紙代碼 ---
+                "J001": { name: "開機殘紙", cause: "感應器偵測到內部有殘留紙張。", rem: ["打開全門清除路徑碎紙","清潔感應器鏡頭"] },
+                "J010": { name: "第一紙匣進紙失敗", cause: "紙匣 1 沒抓到紙。", rem: ["檢查第一進紙輪","清潔感應器"] },
+                "J080": { name: "對位感應器不就位", cause: "紙張沒到對位部。", rem: ["檢查傳送路徑異物","檢查對位離合器"] },
+                "J091": { name: "定著排紙滯留", cause: "紙張卡在定著出口。最危險。", rem: ["★高溫注意：小心清除定著出口紙張"] },
+                // --- SP 模式：維修指令 ---
+                "SP5801-001": {
+                    name: "全記憶體清除 (Memory Clear)",
+                    cause: "將機器設定恢復出廠狀態。",
+                    rem: ["★維修大忌：執行前必備份 SMC 數值"]
+                },
+                "SP5810-001": {
+                    name: "SC 錯誤重置 (消碼)",
+                    cause: "解除 5xx 系列定著鎖定代碼。",
+                    rem: ["輸入 5810 選 001 後按 # 執行","重開總電源"]
+                },
+                "SP3030-001": {
+                    name: "載體初始化",
+                    cause: "更換顯影劑後的感應器校準。",
+                    rem: ["換料後必做","執行時間約 2 分鐘"]
+                },
+                "SP5832-001": {
+                    name: "硬碟格式化",
+                    cause: "修復硬碟損毀磁區。",
+                    rem: ["解決 SC863","格式化後資料會全清"]
+                }
+            }
+        };
+
+        let curM = "";
+        function selM(m, b) {
+            document.querySelectorAll('.model-btn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            curM = m;
+            document.getElementById('q').focus();
+        }
+
+        function search() {
+            let input = document.getElementById('q').value.trim().toUpperCase();
+            if (!input || !curM) { alert("請先選機型並輸入代碼"); return; }
+            
+            let fullDb = window.db["COMMON"];
+            let cleanIn = input.replace(/[^0-9]/g, '');
+
+            let foundKey = Object.keys(fullDb).find(key => {
+                let cleanKey = key.replace(/[^0-9]/g, '');
+                // 1. 完全匹配 2. 包含數字匹配 3. 包含文字匹配
+                if (key === input || key === "SC"+input || key === "SP"+input || key === "J"+input) return true;
+                if (cleanIn !== "" && cleanKey === cleanIn) return true;
+                if (key.includes(input)) return true;
+                return false;
+            });
+
+            let data = fullDb[foundKey];
+            if (data) {
+                document.getElementById('res').style.display = 'block';
+                document.getElementById('mTag').innerText = "當前機型: " + curM;
+                document.getElementById('rCode').innerText = foundKey;
+                document.getElementById('rName').innerText = data.name;
+                document.getElementById('rCause').innerText = data.cause;
+                document.getElementById('rRem').innerHTML = data.rem.map((x, i) => `<div class="rem-item"><b>${i + 1}.</b> ${x}</div>`).join('');
+                window.scrollTo({ top: document.getElementById('res').offsetTop - 100, behavior: 'smooth' });
+            } else { 
+                alert("「全書」資料庫找不到與「" + input + "」相關的代碼。"); 
+            }
+            updateCount();
+        }
+
+        function updateCount() {
+            let total = Object.keys(window.db["COMMON"]).length;
+            document.getElementById('count').innerText = "理光終極維修全書 · 載入實戰代碼總數: " + total;
+        }
+        window.onload = updateCount;
+    </script>
+</body>
+</html>
